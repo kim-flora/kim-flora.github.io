@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shop Hoa Kim Kim - Hãy để hoa nói lời của bạn</title>
+
+  <!-- Mã xác thực Google Search Console -->
+  <meta name="google-site-verification" content="chuoikytudangso" />
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+    body { background-color: #fbf9f6; color: #333; line-height: 1.6; }
+
+    /* Top Bar */
+    .topbar { background: #6b263b; color: #fff; font-size: 13px; padding: 8px 5%; display: flex; justify-content: space-between; align-items: center; }
+    .topbar a { color: #ffe6ec; text-decoration: none; margin-left: 15px; font-weight: 500; }
+
+    /* Header */
+    header { background: #ffffff; padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 10px rgba(0,0,0,0.06); position: sticky; top: 0; z-index: 1000; }
+    .logo-area { text-decoration: none; }
+    .logo-area h1 { font-size: 24px; color: #8e2b48; text-transform: uppercase; letter-spacing: 1px; font-weight: 800; }
+    .logo-area span { font-size: 12px; color: #777; font-style: italic; display: block; }
+    .header-contact { display: flex; gap: 10px; align-items: center; }
+    .contact-badge { background: #fdf2f4; border: 1px solid #f3cbd5; padding: 7px 15px; border-radius: 20px; font-weight: 600; color: #8e2b48; text-decoration: none; font-size: 13px; transition: 0.2s; }
+    .contact-badge:hover { background: #8e2b48; color: #fff; }
+
+    /* Navigation Bar với Dropdown */
+    nav { background: #fff; border-bottom: 1px solid #eee5dc; padding: 0 5%; display: flex; justify-content: center; gap: 30px; position: relative; z-index: 900; }
+    .nav-item { position: relative; }
+    .nav-link { display: block; padding: 16px 5px; text-decoration: none; color: #3b3b3b; font-weight: 600; font-size: 14.5px; border-bottom: 2px solid transparent; transition: 0.2s; }
+    .nav-item:hover .nav-link, .nav-item.active .nav-link { color: #8e2b48; border-bottom-color: #8e2b48; }
+
+    /* Menu con (Dropdown) */
+    .dropdown-menu { display: none; position: absolute; top: 100%; left: 0; min-width: 220px; background: #fff; box-shadow: 0 6px 18px rgba(0,0,0,0.1); border-radius: 0 0 8px 8px; border: 1px solid #f2eee9; list-style: none; padding: 8px 0; }
+    .dropdown-menu li a { display: block; padding: 9px 18px; color: #4f4f4f; font-size: 13.5px; text-decoration: none; font-weight: 500; transition: 0.2s; }
+    .dropdown-menu li a:hover { background: #fcf1f4; color: #8e2b48; padding-left: 22px; }
+    .nav-item:hover .dropdown-menu { display: block; }
+
+    /* Banner chính */
+    .hero-banner { width: 100%; max-height: 500px; overflow: hidden; position: relative; background: #ebd5dc; }
+    .hero-banner img { width: 100%; height: 100%; max-height: 500px; object-fit: cover; display: block; }
+
+    /* Container chung */
+    .container { padding: 35px 5%; max-width: 1200px; margin: 0 auto; }
+
+    /* Bộ lọc đa năng (Filter Bar) */
+    .filter-box { background: #fff; border: 1px solid #eee4dd; border-radius: 12px; padding: 18px 24px; margin-bottom: 35px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+    .filter-title { font-size: 14px; font-weight: 700; color: #8e2b48; text-transform: uppercase; margin-bottom: 12px; }
+    .filter-group { display: flex; flex-wrap: wrap; gap: 15px; align-items: center; }
+    .filter-select { padding: 9px 14px; border: 1px solid #dfd8d1; border-radius: 8px; font-size: 13.5px; color: #444; outline: none; background: #faf8f5; min-width: 170px; }
+    .filter-btn { padding: 9px 20px; background: #8e2b48; color: white; border: none; border-radius: 8px; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+
+    /* Tiêu đề mục */
+    .section-header { text-align: center; margin-bottom: 30px; }
+    .section-header h2 { font-size: 22px; color: #8e2b48; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .section-header p { color: #777; font-size: 13.5px; }
+
+    /* Danh sách sản phẩm thực tế */
+    .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 25px; margin-bottom: 50px; }
+    .card { background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #f0eae4; display: flex; flex-direction: column; transition: transform 0.2s; }
+    .card:hover { transform: translateY(-4px); }
+    .card-img-wrap { width: 100%; height: 350px; background-color: #fcf8f9; overflow: hidden; }
+    .card-img-wrap img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+    .card:hover .card-img-wrap img { transform: scale(1.03); }
+
+    .card-body { padding: 18px; display: flex; flex-direction: column; flex-grow: 1; }
+    .card-tag { font-size: 11px; color: #8e2b48; text-transform: uppercase; font-weight: 700; margin-bottom: 6px; }
+    .card-title { font-size: 15px; font-weight: 600; color: #2d2d2d; margin-bottom: 10px; line-height: 1.4; }
+    .card-price { font-size: 17px; font-weight: 700; color: #b82b52; margin-top: auto; margin-bottom: 14px; }
+    .btn-order { background: #8e2b48; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .btn-order:hover { background: #6b1f35; }
+
+    /* Khối Thiết kế theo ngân sách */
+    .budget-section { background: linear-gradient(135deg, #fff7f9 0%, #fdf2f4 100%); border: 1px solid #f4ced8; border-radius: 16px; padding: 35px 25px; margin-top: 20px; }
+    .budget-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 20px; }
+    .budget-field label { display: block; font-size: 13px; font-weight: 600; color: #5a3d46; margin-bottom: 6px; }
+    .budget-field select, .budget-field input { width: 100%; padding: 10px; border: 1px solid #e5bac5; border-radius: 8px; font-size: 13.5px; background: #fff; outline: none; }
+    .btn-submit-budget { grid-column: 1 / -1; padding: 12px; background: #8e2b48; color: white; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; font-size: 15px; margin-top: 10px; transition: 0.2s; }
+    .btn-submit-budget:hover { background: #6b1f35; }
+
+    /* Nút liên hệ nổi ở góc phải */
+    .floating-buttons { position: fixed; bottom: 25px; right: 20px; display: flex; flex-direction: column; gap: 12px; z-index: 999; }
+    .float-btn { display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; border-radius: 50%; color: #fff; text-decoration: none; box-shadow: 0 4px 12px rgba(0,0,0,0.25); transition: 0.2s; font-size: 20px; }
+    .float-btn:hover { transform: scale(1.1); }
+    .btn-call { background: #e53935; }
+    .btn-zalo { background: #0084ff; font-weight: 700; font-size: 14px; }
+    .btn-fb { background: #1877f2; }
+
+    /* Footer */
+    footer { background: #2f2227; color: #f0eae7; padding: 45px 5% 20px; margin-top: 50px; font-size: 14px; }
+    .footer-content { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 30px; }
+    .footer-col h3 { color: #f9c5d1; margin-bottom: 15px; font-size: 16px; text-transform: uppercase; }
+    .footer-col p { margin-bottom: 8px; opacity: 0.85; }
+    .footer-col a { color: #f9c5d1; text-decoration: none; }
+    .footer-bottom { border-top: 1px solid #4a3a41; margin-top: 35px; padding-top: 15px; text-align: center; font-size: 12px; opacity: 0.6; }
+  </style>
+</head>
+<body>
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <span>🌸 Shop Hoa Kim Kim - Hãy để hoa nói lời của bạn</span>
+    <div>
+      <span>📍 Phường Tây Thạnh, TP.HCM</span>
+      <a href="tel:0356831306">Hotline: 0356.83.1306</a>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <a href="#" class="logo-area">
+      <h1>Shop Hoa Kim Kim</h1>
+      <span>Hãy để hoa nói lời của bạn</span>
+    </a>
+    <div class="header-contact">
+      <a href="https://zalo.me/0356831306" target="_blank" class="contact-badge">💬 Nhắn Zalo</a>
+      <a href="https://www.facebook.com/kimshop1306" target="_blank" class="contact-badge">📘 Facebook</a>
+    </div>
+  </header>
+
+  <!-- Thanh Menu chính 5 Danh Mục + Trang chủ (Có Dropdown) -->
+  <nav>
+    <div class="nav-item active"><a href="#" class="nav-link">Trang chủ</a></div>
+    
+    <!-- Nhóm 1: Hoa theo dịp -->
+    <div class="nav-item">
+      <a href="#" class="nav-link">Hoa theo dịp ▾</a>
+      <ul class="dropdown-menu">
+        <li><a href="#">Sinh nhật</a></li>
+        <li><a href="#">Tình yêu – Kỷ niệm</a></li>
+        <li><a href="#">Khai trương – Khai giảng</a></li>
+        <li><a href="#">Tốt nghiệp – Chúc mừng</a></li>
+        <li><a href="#">Tri ân – Cảm ơn</a></li>
+        <li><a href="#">Cưới – Dạm ngõ</a></li>
+        <li><a href="#">Chia buồn – Hoa viếng</a></li>
+        <li><a href="#">Ngày lễ</a></li>
+      </ul>
+    </div>
+
+    <!-- Nhóm 2: Bó hoa -->
+    <div class="nav-item">
+      <a href="#" class="nav-link">Bó hoa ▾</a>
+      <ul class="dropdown-menu">
+        <li><a href="#">Bó form tròn</a></li>
+        <li><a href="#">Bó một mặt</a></li>
+        <li><a href="#">Bó nghệ thuật</a></li>
+        <li><a href="#">Bó hoa cưới</a></li>
+      </ul>
+    </div>
+
+    <!-- Nhóm 3: Hoa thiết kế -->
+    <div class="nav-item">
+      <a href="#" class="nav-link">Hoa thiết kế ▾</a>
+      <ul class="dropdown-menu">
+        <li><a href="#">Giỏ hoa</a></li>
+        <li><a href="#">Hộp hoa</a></li>
+        <li><a href="#">Trụ hoa</a></li>
+        <li><a href="#">Bình hoa</a></li>
+        <li><a href="#">Túi hoa</a></li>
+        <li><a href="#">Kệ hoa</a></li>
+      </ul>
+    </div>
+
+    <!-- Nhóm 4: Quà tặng -->
+    <div class="nav-item">
+      <a href="#" class="nav-link">Quà tặng ▾</a>
+      <ul class="dropdown-menu">
+        <li><a href="#">Hoa và trái cây</a></li>
+        <li><a href="#">Hoa và bánh kẹo</a></li>
+        <li><a href="#">Hoa và gấu bông</a></li>
+        <li><a href="#">Hoa và quà theo yêu cầu</a></li>
+      </ul>
+    </div>
+
+    <!-- Nhóm 5: Đặt theo ngân sách -->
+    <div class="nav-item"><a href="#ngan-sach" class="nav-link">Đặt theo ngân sách</a></div>
+  </nav>
+
+  <!-- Banner hoa sen chính -->
+  <div class="hero-banner">
+    <img src="banner.jpg" alt="Shop Hoa Kim Kim">
+  </div>
+
+  <div class="container">
+    
+    <!-- Bộ lọc tiện lợi: Chất liệu, Mức giá, Màu sắc, Kích thước -->
+    <div class="filter-box">
+      <div class="filter-title">🔍 Lọc Nhanh Sản Phẩm</div>
+      <div class="filter-group">
+        
+        <!-- Lọc Chất liệu -->
+        <select class="filter-select">
+          <option value="">Chất liệu: Tất cả</option>
+          <option value="tuoi">Hoa tươi</option>
+          <option value="sap">Hoa sáp</option>
+          <option value="mix">Kết hợp</option>
+        </select>
+
+        <!-- Lọc Mức giá -->
+        <select class="filter-select">
+          <option value="">Mức giá: Tất cả</option>
+          <option value="1">Dưới 500.000 đ</option>
+          <option value="2">500.000 đ - 1.000.000 đ</option>
+          <option value="3">1.000.000 đ - 2.000.000 đ</option>
+          <option value="4">Trên 2.000.000 đ</option>
+        </select>
+
+        <!-- Lọc Màu sắc -->
+        <select class="filter-select">
+          <option value="">Tone màu: Tất cả</option>
+          <option value="hong">Tone Hồng / Pastel</option>
+          <option value="do">Tone Đỏ may mắn</option>
+          <option value="vang">Tone Vàng / Cam ấm</option>
+          <option value="trang">Tone Trắng tinh khôi</option>
+          <option value="xanh">Tone Xanh / Khác</option>
+        </select>
+
+        <!-- Lọc Kích thước -->
+        <select class="filter-select">
+          <option value="">Kích thước: Tất cả</option>
+          <option value="s">Tiêu chuẩn / Để bàn</option>
+          <option value="m">Size Vừa</option>
+          <option value="l">Size Lớn / Kệ đứng</option>
+          <option value="xl">Bó hoa / Kệ khổng lồ</option>
+        </select>
+
+        <button class="filter-btn" onclick="alert('Đang hiển thị các mẫu phù hợp!')">Lọc mẫu</button>
+      </div>
+    </div>
+
+    <!-- Mẫu hoa tiêu biểu -->
+    <div class="section-header">
+      <h2>Mẫu Thiết Kế Nổi Bật</h2>
+      <p>Sản phẩm thực tế được thực hiện trực tiếp tại Kim Kim</p>
+    </div>
+
+    <div class="product-grid">
+      <!-- Mẫu 1 -->
+      <div class="card">
+        <div class="card-img-wrap"><img src="sp1.jpg" alt="Kệ Bánh Kẹo Khai Trương"></div>
+        <div class="card-body">
+          <span class="card-tag">Quà Tặng • Hoa & Bánh Kẹo</span>
+          <div class="card-title">Kệ Bánh Kẹo Khai Trương Hồng Phát Tone Vàng Pastel</div>
+          <div class="card-price">Liên hệ báo giá</div>
+          <button class="btn-order" onclick="datHoa('Kệ Bánh Kẹo Khai Trương Hồng Phát')">Tư vấn mẫu qua Zalo</button>
+        </div>
+      </div>
+
+      <!-- Mẫu 2 -->
+      <div class="card">
+        <div class="card-img-wrap"><img src="sp2.jpg" alt="Kệ Hoa Cưới Happy Wedding"></div>
+        <div class="card-body">
+          <span class="card-tag">Hoa Theo Dịp • Cưới – Dạm Ngõ</span>
+          <div class="card-title">Kệ Hoa Chúc Mừng Happy Wedding Tone Hồng Kem Sang Trọng</div>
+          <div class="card-price">Liên hệ báo giá</div>
+          <button class="btn-order" onclick="datHoa('Kệ Hoa Cưới Happy Wedding Tone Hồng Kem')">Tư vấn mẫu qua Zalo</button>
+        </div>
+      </div>
+
+      <!-- Mẫu 3 -->
+      <div class="card">
+        <div class="card-img-wrap"><img src="sp3.jpg" alt="Kệ Quà Sự Kiện"></div>
+        <div class="card-body">
+          <span class="card-tag">Hoa Theo Dịp • Ngày Lễ / Sự Kiện</span>
+          <div class="card-title">Kệ Quà Bánh Kẹo & Đèn Lồng Sự Kiện Trung Thu Đoàn Viên</div>
+          <div class="card-price">Liên hệ báo giá</div>
+          <button class="btn-order" onclick="datHoa('Kệ Quà Bánh Kẹo Sự Kiện Trung Thu')">Tư vấn mẫu qua Zalo</button>
+        </div>
+      </div>
+
+      <!-- Mẫu 4 -->
+      <div class="card">
+        <div class="card-img-wrap"><img src="sp4.jpg" alt="Bó Hoa Tone Trắng Khổng Lồ"></div>
+        <div class="card-body">
+          <span class="card-tag">Bó Hoa • Bó Nghệ Thuật Khổng Lồ</span>
+          <div class="card-title">Bó Hoa Hồng & Tulip Tone Trắng Thuần Khiết Size Lớn</div>
+          <div class="card-price">Liên hệ báo giá</div>
+          <button class="btn-order" onclick="datHoa('Bó Hoa Tone Trắng Khổng Lồ')">Tư vấn mẫu qua Zalo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Khối Thiết Kế Theo Ngân Sách -->
+    <div class="budget-section" id="ngan-sach">
+      <div class="section-header" style="margin-bottom: 15px;">
+        <h2>🎨 Đặt Thiết Kế Theo Ngân Sách Riêng</h2>
+        <p>Chọn mong muốn của bạn, tiệm sẽ lên mẫu hoa phù hợp nhất theo ngân sách</p>
+      </div>
+
+      <div class="budget-form">
+        <div class="budget-field">
+          <label>1. Chọn dịp tặng:</label>
+          <select id="bgDiptang">
+            <option>Sinh nhật</option>
+            <option>Tình yêu – Kỷ niệm</option>
+            <option>Khai trương – Chúc mừng</option>
+            <option>Tốt nghiệp – Tri ân</option>
+            <option>Cưới – Dạm ngõ</option>
+            <option>Chia buồn – Hoa viếng</option>
+            <option>Khác</option>
+          </select>
+        </div>
+
+        <div class="budget-field">
+          <label>2. Chất liệu hoa:</label>
+          <select id="bgChatlieu">
+            <option>Hoa tươi tự nhiên</option>
+            <option>Hoa sáp thơm vĩnh cửu</option>
+            <option>Kết hợp hoa tươi và hoa sáp</option>
+          </select>
+        </div>
+
+        <div class="budget-field">
+          <label>3. Tone màu yêu thích:</label>
+          <select id="bgMau">
+            <option>Tone Hồng Pastel ngọt ngào</option>
+            <option>Tone Đỏ rực rỡ / Sang trọng</option>
+            <option>Tone Vàng cam may mắn</option>
+            <option>Tone Trắng thanh lịch</option>
+            <option>Tiệm phối màu tự do theo hoa theo mùa</option>
+          </select>
+        </div>
+
+        <div class="budget-field">
+          <label>4. Ngân sách dự kiến:</label>
+          <select id="bgGia">
+            <option>Từ 300.000 đ – 500.000 đ</option>
+            <option>Từ 500.000 đ – 1.000.000 đ</option>
+            <option>Từ 1.000.000 đ – 2.000.000 đ</option>
+            <option>Trên 2.000.000 đ (Thiết kế VIP)</option>
+          </select>
+        </div>
+
+        <button class="btn-submit-budget" onclick="guiYeuCauNganSach()">Gửi yêu cầu thiết kế qua Zalo ngay</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Nút liên hệ nổi ở góc phải -->
+  <div class="floating-buttons">
+    <a href="tel:0356831306" class="float-btn btn-call" title="Gọi điện">📞</a>
+    <a href="https://zalo.me/0356831306" target="_blank" class="float-btn btn-zalo" title="Chat Zalo">Zalo</a>
+    <a href="https://www.facebook.com/kimshop1306" target="_blank" class="float-btn btn-fb" title="Nhắn Facebook">f</a>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div class="footer-content">
+      <div class="footer-col">
+        <h3>Shop Hoa Kim Kim</h3>
+        <p><strong>"Hãy để hoa nói lời của bạn"</strong></p>
+        <p>Chuyên thiết kế hoa tươi, hoa sáp, giỏ hoa, hộp hoa, bó hoa, kệ hoa sự kiện và đào tạo học viên cắm hoa nghệ thuật.</p>
+      </div>
+      <div class="footer-col">
+        <h3>Thông Tin Liên Hệ</h3>
+        <p>📍 Địa chỉ: Phường Tây Thạnh, TP.HCM</p>
+        <p>📞 Hotline: <a href="tel:0356831306">0356.83.1306</a></p>
+        <p>💬 Zalo: <a href="https://zalo.me/0356831306" target="_blank">0356.83.1306</a></p>
+        <p>📘 Facebook: <a href="https://www.facebook.com/kimshop1306" target="_blank">facebook.com/kimshop1306</a></p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © 2026 Shop Hoa Kim Kim. Tất cả quyền được bảo lưu.
+    </div>
+  </footer>
+
+  <script>
+    function datHoa(tenHoa) {
+      const xacNhan = confirm(`Bạn muốn tư vấn mẫu "${tenHoa}" qua Zalo ngay chứ?`);
+      if (xacNhan) {
+        window.open('https://zalo.me/0356831306', '_blank');
+      }
+    }
+
+    function guiYeuCauNganSach() {
+      const dip = document.getElementById('bgDiptang').value;
+      const chatlieu = document.getElementById('bgChatlieu').value;
+      const mau = document.getElementById('bgMau').value;
+      const gia = document.getElementById('bgGia').value;
+      
+      const loiNhan = `Chào Kim Kim, mình muốn nhờ tư vấn cắm mẫu hoa theo yêu cầu:\n- Dịp: ${dip}\n- Chất liệu: ${chatlieu}\n- Tone màu: ${mau}\n- Khoảng giá: ${gia}`;
+      alert(loiNhan);
+      window.open('https://zalo.me/0356831306', '_blank');
+    }
+  </script>
+
+</body>
+</html>
