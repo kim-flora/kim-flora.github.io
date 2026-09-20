@@ -1,0 +1,59 @@
+KIM FLORA - HƯỚNG DẪN KẾT NỐI ĐỂ KHÔNG PHẢI UPDATE GITHUB MỖI LẦN
+
+MỤC TIÊU
+- GitHub Pages chỉ giữ “bộ khung” website.
+- Supabase (dịch vụ cơ sở dữ liệu và lưu ảnh trực tuyến) giữ sản phẩm, ảnh, đơn hàng, bài viết và thông tin thanh toán.
+- Sau khi kết nối xong một lần, chị vào /admin.html để thêm/sửa/xóa sản phẩm. Khách sẽ thấy thay đổi mà không cần upload index.html lại.
+
+BƯỚC 1 - TẠO SUPABASE
+1. Tạo tài khoản/dự án tại Supabase.
+2. Mở SQL Editor.
+3. Copy toàn bộ file supabase-schema.sql và Run.
+
+BƯỚC 2 - LẤY 2 THÔNG TIN CẤU HÌNH
+Trong Supabase tìm Project URL và anon/public key.
+Mở file supabase-config.js và điền:
+window.KF_SUPABASE = {
+  url: 'https://....supabase.co',
+  anonKey: '....'
+};
+CHỈ dùng anon/public key. KHÔNG đưa service_role key vào website.
+Sau đó upload lại supabase-config.js lên GitHub. Đây là lần cập nhật cấu hình quan trọng; sau này thêm sản phẩm không cần sửa GitHub nữa.
+
+BƯỚC 3 - BẬT ĐĂNG NHẬP GOOGLE (GMAIL) VÀ FACEBOOK
+Trong Supabase > Authentication > Providers:
+- Bật Google và nhập thông tin OAuth của Google.
+- Bật Facebook và nhập thông tin OAuth của Meta/Facebook.
+- Site URL đặt là https://kim-flora.github.io/ (sau này mua tên miền thì đổi sang tên miền mới).
+- Redirect URL cho phép: https://kim-flora.github.io/account.html và https://kim-flora.github.io/admin.html
+Giao diện Supabase có thể thay đổi tên mục theo thời điểm.
+
+BƯỚC 4 - CHO TÀI KHOẢN CỦA CHỊ QUYỀN QUẢN TRỊ
+1. Mở https://kim-flora.github.io/admin.html
+2. Đăng nhập bằng Google/Facebook.
+3. Nếu trang báo “tài khoản chưa có quyền quản trị”, copy User ID hiện trên trang.
+4. Trong Supabase > SQL Editor chạy:
+   insert into public.admins(user_id) values ('DAN-USER-ID-VAO-DAY');
+5. Tải lại admin.html.
+
+BƯỚC 5 - CẤU HÌNH THANH TOÁN
+Trong admin.html > Thanh toán:
+- Ngân hàng
+- Chủ tài khoản
+- Số tài khoản
+- Upload ảnh QR
+- Ghi chú thanh toán
+Khách sẽ thấy phần này ở checkout.html.
+
+CÁC TRANG
+- /index.html : trang bán hàng
+- /product.html?id=... : chi tiết sản phẩm, ảnh lớn, thêm giỏ, mua ngay
+- /cart.html : giỏ hàng
+- /checkout.html : thông tin giao + thanh toán
+- /account.html : khách đăng nhập Google/Facebook + xem đơn
+- /admin.html : quản trị sản phẩm, ảnh, bài viết, đơn, thanh toán
+
+LƯU Ý
+- Đăng nhập Google/Facebook chỉ hoạt động sau khi cấu hình provider trong Supabase.
+- Nếu chưa cấu hình Supabase, website vẫn hiển thị 4 sản phẩm mẫu, nhưng đơn hàng trực tuyến và quản trị online chưa lưu được.
+- Khi mua tên miền riêng, chỉ cần đổi Site URL/Redirect URL trong Supabase và cấu hình tên miền cho GitHub Pages; không cần làm lại website.
