@@ -1,0 +1,14 @@
+KIM FLORA - QUẢN LÝ DANH MỤC ĐỘNG
+
+1) Supabase > SQL Editor > New query.
+2) Mở categories_update.sql, copy toàn bộ, dán và bấm Run.
+3) Upload đè lên GitHub 3 file: admin.html, store.js, index.html.
+4) Chờ GitHub Pages deploy xong.
+5) Mở /admin.html > tab Danh mục.
+
+Từ sau bước này:
+- Có thể Thêm / Sửa / Ẩn / Xóa danh mục ngay trong trang quản trị.
+- Ví dụ: Hoa handmade, Nơ & phụ kiện, Bó rau củ, Hoa len...
+- Danh mục mới tự xuất hiện ở trang chủ và ô chọn danh mục của sản phẩm.
+- Không cần sửa GitHub mỗi lần thêm danh mục.
+- Không thể xóa danh mục khi vẫn còn sản phẩm trong đó; hãy chuyển sản phẩm trước.

@@ -1,0 +1,15 @@
+KIM FLORA - CẤU HÌNH CHUYỂN KHOẢN
+
+Ngân hàng: VPBank
+Chủ tài khoản: GIAP THI KIM OANH
+Số tài khoản: 99470868
+Ảnh QR: payment-qr.jpg
+
+ĐỂ ÁP DỤNG NGAY:
+1. Upload payment-qr.jpg, checkout.html và admin.html lên GitHub cùng cấp với index.html.
+2. Vào Supabase > SQL Editor > New query.
+3. Mở payment_setup.sql, copy toàn bộ > dán > Run.
+4. Mở https://kim-flora.github.io/checkout.html và kiểm tra.
+
+SAU KHI TRANG QUẢN TRỊ HOẠT ĐỘNG:
+Vào admin.html > Thanh toán để tự thay ngân hàng, chủ tài khoản, số tài khoản, ảnh QR và ghi chú mà không cần sửa GitHub.

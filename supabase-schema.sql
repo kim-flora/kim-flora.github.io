@@ -67,6 +67,19 @@ create table if not exists public.site_settings (
   updated_at timestamptz not null default now()
 );
 
+
+create table if not exists public.categories (
+  id uuid primary key default gen_random_uuid(),
+  name text unique not null,
+  slug text unique not null,
+  description text,
+  image_url text,
+  active boolean not null default true,
+  sort_order integer not null default 0,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create or replace function public.is_admin()
 returns boolean
 language sql
@@ -80,6 +93,7 @@ alter table public.articles enable row level security;
 alter table public.orders enable row level security;
 alter table public.admins enable row level security;
 alter table public.site_settings enable row level security;
+alter table public.categories enable row level security;
 
 drop policy if exists "public read active products" on public.products;
 create policy "public read active products" on public.products for select using (active = true or public.is_admin());
@@ -105,6 +119,13 @@ drop policy if exists "public read settings" on public.site_settings;
 create policy "public read settings" on public.site_settings for select using (true);
 drop policy if exists "admin write settings" on public.site_settings;
 create policy "admin write settings" on public.site_settings for all using (public.is_admin()) with check (public.is_admin());
+
+
+
+drop policy if exists "public read active categories" on public.categories;
+create policy "public read active categories" on public.categories for select using (active = true or public.is_admin());
+drop policy if exists "admin write categories" on public.categories;
+create policy "admin write categories" on public.categories for all using (public.is_admin()) with check (public.is_admin());
 
 -- Storage buckets
 insert into storage.buckets (id,name,public) values ('product-images','product-images',true) on conflict (id) do update set public=true;
@@ -137,3 +158,35 @@ where not exists (select 1 from public.articles);
 insert into public.articles (title,content,active,sort_order)
 select 'Cách bảo quản hoa sáp','Để hoa nơi khô thoáng, tránh nắng gắt, hơi nước và nơi quá nóng. Không xịt nước hoặc nước hoa trực tiếp lên cánh. Khi có bụi, dùng cọ mềm hoặc máy sấy chế độ gió mát ở khoảng cách vừa phải.',true,2
 where not exists (select 1 from public.articles where title='Cách bảo quản hoa sáp');
+
+
+-- Cấu hình thanh toán Kim Flora
+insert into public.site_settings (key, value, updated_at)
+values (
+  'payment',
+  jsonb_build_object(
+    'bank_name', 'VPBank',
+    'account_name', 'GIAP THI KIM OANH',
+    'account_number', '99470868',
+    'qr_url', 'payment-qr.jpg',
+    'note', 'Vui lòng kiểm tra đúng tổng tiền trước khi chuyển khoản. Với sản phẩm Liên hệ báo giá, chờ Kim Flora xác nhận giá trước khi chuyển.'
+  ),
+  now()
+)
+on conflict (key) do update
+set value = excluded.value,
+    updated_at = now();
+
+
+-- Danh mục mặc định
+insert into public.categories (name,slug,description,active,sort_order)
+values
+('Bó hoa','bo-hoa','Form tròn, một mặt, nghệ thuật, bó cưới',true,1),
+('Giỏ hoa','gio-hoa','Giỏ hoa để bàn, sinh nhật, tri ân',true,2),
+('Hộp hoa','hop-hoa','Hộp hoa gọn, quà tặng tinh tế',true,3),
+('Bình & túi hoa','binh-tui-hoa','Bình hoa, túi hoa và thiết kế để bàn',true,4),
+('Kệ & trụ hoa','ke-tru-hoa','Khai trương, chúc mừng, sự kiện',true,5),
+('Quà tặng','qua-tang','Hoa, trái cây, bánh kẹo, quà theo yêu cầu',true,6),
+('Cưới – dạm ngõ','cuoi-dam-ngo','Hoa cưới, tráp, dạm ngõ và lễ gia tiên',true,7)
+on conflict (name) do nothing;
+

@@ -6,6 +6,15 @@
     {id:'sp3',title:'Kệ Quà Bánh Kẹo & Đèn Lồng Sự Kiện Trung Thu Đoàn Viên',tag:'Hoa theo dịp • Ngày lễ / sự kiện',category:'Quà tặng',image_url:'sp3.jpg',gallery:['sp3.jpg'],price:null,material:'Bánh kẹo & quà sự kiện',occasion:'Trung Thu · Sự kiện · Chúc mừng',tone:'Đỏ – cam – xanh – vàng',size:'Kệ đứng / theo ngân sách',description:'Mẫu kệ quà Trung Thu nhiều màu, kết hợp bánh kẹo và chi tiết trang trí theo chủ đề lễ hội.',notes:['Có thể tăng hoặc giảm số lượng quà theo ngân sách.','Chi tiết trang trí theo mùa có thể thay đổi nhưng giữ tinh thần Trung Thu.','Shop chốt trước nội dung bảng, tone chính và kích thước kệ.'],active:true,featured:true,sort_order:3},
     {id:'sp4',title:'Bó Hoa Tone Trắng Thuần Khiết Size Lớn',tag:'Bó hoa • Bó nghệ thuật',category:'Bó hoa',image_url:'sp4.jpg',gallery:['sp4.jpg'],price:null,material:'Hoa tươi',occasion:'Sinh nhật · Kỷ niệm · Chúc mừng',tone:'Trắng – kem – xanh dịu',size:'Bó lớn',description:'Mẫu bó hoa size lớn với bảng màu trắng kem, tập trung vào cảm giác sạch, thanh lịch và nhẹ nhàng.',notes:['Hoa thực tế có thể thay đổi theo độ nở, mùa và nguồn hàng.','Có thể điều chỉnh kích thước bó và tỷ lệ giấy theo ngân sách.','Shop tư vấn trước nếu cần thay hoa để vẫn giữ đúng tone và tinh thần mẫu.'],active:true,featured:true,sort_order:4}
   ];
+  const FALLBACK_CATEGORIES=[
+    {id:'cat1',name:'Bó hoa',slug:'bo-hoa',description:'Form tròn, một mặt, nghệ thuật, bó cưới',image_url:null,active:true,sort_order:1},
+    {id:'cat2',name:'Giỏ hoa',slug:'gio-hoa',description:'Giỏ hoa để bàn, sinh nhật, tri ân',image_url:null,active:true,sort_order:2},
+    {id:'cat3',name:'Hộp hoa',slug:'hop-hoa',description:'Hộp hoa gọn, quà tặng tinh tế',image_url:null,active:true,sort_order:3},
+    {id:'cat4',name:'Bình & túi hoa',slug:'binh-tui-hoa',description:'Bình hoa, túi hoa và thiết kế để bàn',image_url:null,active:true,sort_order:4},
+    {id:'cat5',name:'Kệ & trụ hoa',slug:'ke-tru-hoa',description:'Khai trương, chúc mừng, sự kiện',image_url:null,active:true,sort_order:5},
+    {id:'cat6',name:'Quà tặng',slug:'qua-tang',description:'Hoa, trái cây, bánh kẹo, quà theo yêu cầu',image_url:null,active:true,sort_order:6},
+    {id:'cat7',name:'Cưới – dạm ngõ',slug:'cuoi-dam-ngo',description:'Hoa cưới, tráp, dạm ngõ và lễ gia tiên',image_url:null,active:true,sort_order:7}
+  ];
   const CART_KEY='kimFloraCartV3';
   let _client=null,_productsCache=null;
   function cfg(){return window.KF_SUPABASE||{url:'',anonKey:''}}
@@ -39,6 +48,17 @@
       {id:'care2',title:'Cách bảo quản hoa sáp',content:'Để hoa nơi khô thoáng, tránh nắng gắt, hơi nước và nơi quá nóng. Không xịt nước hoặc nước hoa trực tiếp lên cánh. Khi có bụi, dùng cọ mềm hoặc máy sấy chế độ gió mát ở khoảng cách vừa phải.'}
     ]
   }
+  async function loadCategories(activeOnly=true){
+    const c=client();
+    if(c){
+      let q=c.from('categories').select('*').order('sort_order',{ascending:true}).order('created_at',{ascending:true});
+      if(activeOnly)q=q.eq('active',true);
+      const {data,error}=await q;
+      if(!error&&Array.isArray(data))return data;
+      console.warn('Supabase categories fallback:',error);
+    }
+    return FALLBACK_CATEGORIES.filter(x=>!activeOnly||x.active);
+  }
   async function getSetting(key){const c=client();if(!c)return null;const {data,error}=await c.from('site_settings').select('value').eq('key',key).maybeSingle();return error?null:(data?.value||null)}
   function getCart(){try{return JSON.parse(localStorage.getItem(CART_KEY)||'[]')}catch{return []}}
   function saveCart(cart){localStorage.setItem(CART_KEY,JSON.stringify(cart));updateCartCount();window.dispatchEvent(new CustomEvent('kf-cart-change',{detail:cart}))}
@@ -66,7 +86,25 @@
   async function adminArticles(){const c=client();if(!c)return[];const {data,error}=await c.from('articles').select('*').order('sort_order',{ascending:true});if(error)throw error;return data||[]}
   async function saveArticle(a){const c=client();const payload={...a,updated_at:new Date().toISOString()};const aid=payload.id||null;if(aid)delete payload.id;const {data,error}=aid?await c.from('articles').update(payload).eq('id',aid).select().single():await c.from('articles').insert(payload).select().single();if(error)throw error;return data}
   async function deleteArticle(id){const c=client();const {error}=await c.from('articles').delete().eq('id',id);if(error)throw error}
+  async function adminCategories(){return loadCategories(false)}
+  function slugify(v=''){return String(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/đ/g,'d').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'danh-muc'}
+  async function saveCategory(cat,oldName=''){
+    const c=client();if(!c)throw new Error('Chưa kết nối Supabase');
+    const payload={...cat,slug:cat.slug?.trim()||slugify(cat.name),updated_at:new Date().toISOString()};
+    const id=payload.id||null;if(id)delete payload.id;
+    const {data,error}=id?await c.from('categories').update(payload).eq('id',id).select().single():await c.from('categories').insert(payload).select().single();
+    if(error)throw error;
+    if(oldName&&oldName!==payload.name){const {error:pe}=await c.from('products').update({category:payload.name,tag:payload.name,updated_at:new Date().toISOString()}).eq('category',oldName);if(pe)throw pe;_productsCache=null}
+    return data;
+  }
+  async function deleteCategory(id){
+    const c=client();if(!c)throw new Error('Chưa kết nối Supabase');
+    const {data:cat,error:ce}=await c.from('categories').select('*').eq('id',id).single();if(ce)throw ce;
+    const {count,error:co}=await c.from('products').select('id',{count:'exact',head:true}).eq('category',cat.name);if(co)throw co;
+    if((count||0)>0)throw new Error(`Danh mục “${cat.name}” đang có ${count} sản phẩm. Hãy chuyển sản phẩm sang danh mục khác trước khi xóa.`);
+    const {error}=await c.from('categories').delete().eq('id',id);if(error)throw error;
+  }
   async function saveSetting(key,value){const c=client();const {data,error}=await c.from('site_settings').upsert({key,value,updated_at:new Date().toISOString()}).select().single();if(error)throw error;return data}
-  window.KFStore={FALLBACK_PRODUCTS,isConfigured,client,esc,money,loadProducts,getProduct,loadArticles,getSetting,getCart,saveCart,addToCart,setQty,removeFromCart,clearCart,cartCount,updateCartCount,hydrateCart,getSession,signInOAuth,signOut,refreshAccountUI,createOrder,myOrders,isAdmin,adminProducts,saveProduct,deleteProduct,uploadImage,adminOrders,updateOrder,adminArticles,saveArticle,deleteArticle,saveSetting};
+  window.KFStore={FALLBACK_PRODUCTS,FALLBACK_CATEGORIES,isConfigured,client,esc,money,loadProducts,getProduct,loadCategories,loadArticles,getSetting,getCart,saveCart,addToCart,setQty,removeFromCart,clearCart,cartCount,updateCartCount,hydrateCart,getSession,signInOAuth,signOut,refreshAccountUI,createOrder,myOrders,isAdmin,adminProducts,saveProduct,deleteProduct,uploadImage,adminOrders,updateOrder,adminArticles,saveArticle,deleteArticle,adminCategories,saveCategory,deleteCategory,saveSetting};
   document.addEventListener('DOMContentLoaded',()=>{updateCartCount();refreshAccountUI().catch(()=>{})});
 })();
