@@ -11,7 +11,7 @@
 <div class="topbar"><div class="topbar-inner"><span><strong>KIM FLORA</strong> – Trao hoa chỉn chu, gửi điều trân quý</span><span>Phường Tây Thạnh, TP.HCM · 0356 831 306</span></div></div>
 <header class="site-header"><div class="header-inner">
   <a class="logo" href="index.html"><b>KIM FLORA</b><span>HOA & QUÀ TẶNG</span></a>
-  <div class="header-actions"><a class="pill-link optional" href="https://zalo.me/0356831306" target="_blank">Zalo</a><a class="pill-link" href="account.html"><span data-account-label>Đăng nhập</span></a><a class="pill-link" href="cart.html">Giỏ hàng <span class="cart-count" data-cart-count>0</span></a></div>
+  <div class="header-actions"><a class="pill-link optional" href="https://zalo.me/0356831306" target="_blank" rel="noopener">Zalo</a><a class="pill-link optional" href="https://m.me/kimshop1306" target="_blank" rel="noopener">Messenger</a><a class="pill-link" href="account.html"><span data-account-label>Đăng nhập</span></a><a class="pill-link" href="cart.html">Giỏ hàng <span class="cart-count" data-cart-count>0</span></a></div>
 </div></header>
 <nav class="nav"><div class="nav-inner"><a href="#san-pham">Sản phẩm</a><a href="#theo-dip">Theo dịp</a><a href="#cham-hoa">Chăm hoa</a><a href="#bang-mau">Bảng màu</a><a href="#ngan-sach">Đặt theo ngân sách</a><a href="#gioi-thieu">Về Kim Flora</a><a href="#chinh-sach">Chính sách</a></div></nav>
 <div class="hero"><img src="banner.jpg" alt="Kim Flora - Hoa và quà tặng"></div>
@@ -96,7 +96,7 @@
   </section>
 
 </main>
-<footer class="footer"><div class="footer-inner"><div><h3>KIM FLORA</h3><p>Hoa & quà tặng thiết kế theo dịp, màu sắc và ngân sách.</p></div><div><h3>Liên hệ</h3><p>Phường Tây Thạnh, TP.HCM</p><p><a href="tel:0356831306">0356 831 306</a></p><p><a href="https://zalo.me/0356831306" target="_blank">Zalo 0356 831 306</a></p></div><div><h3>Khách hàng</h3><p><a href="account.html">Đăng nhập / tài khoản</a></p><p><a href="cart.html">Giỏ hàng</a></p><p><a href="checkout.html">Thanh toán</a></p></div></div><div class="footer-bottom">© 2026 Kim Flora. Nội dung và hình ảnh thuộc Kim Flora.</div></footer>
+<footer class="footer"><div class="footer-inner"><div><h3>KIM FLORA</h3><p>Hoa & quà tặng thiết kế theo dịp, màu sắc và ngân sách.</p></div><div><h3>Liên hệ</h3><p>Phường Tây Thạnh, TP.HCM</p><p><a href="tel:0356831306">0356 831 306</a></p><p><a href="https://zalo.me/0356831306" target="_blank">Zalo 0356 831 306</a></p><p><a href="https://m.me/kimshop1306" target="_blank" rel="noopener">Messenger Kim Flora</a></p><p><a href="https://www.facebook.com/kimshop1306" target="_blank" rel="noopener">Facebook Kim Flora</a></p></div><div><h3>Khách hàng</h3><p><a href="account.html">Đăng nhập / tài khoản</a></p><p><a href="cart.html">Giỏ hàng</a></p><p><a href="checkout.html">Thanh toán</a></p></div></div><div class="footer-bottom">© 2026 Kim Flora. Nội dung và hình ảnh thuộc Kim Flora.</div></footer>
 <script src="supabase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="store.js"></script>
@@ -130,4 +130,4 @@ function sendBudget(){const msg=`Chào Kim Flora, mình muốn đặt thiết k�
 function renderColors(){const q=document.getElementById('colorSearch').value.toLowerCase().trim();const rows=COLORS.filter(x=>(group==='all'||x.group===group)&&(!q||[x.name,x.emotion,x.meaning,x.match,x.usage].join(' ').toLowerCase().includes(q)));document.getElementById('colorBody').innerHTML=rows.map(x=>`<tr><td><span class="swatch" style="background:${x.hex}"></span></td><td><b>${x.name}</b><br><small>${x.hex}</small></td><td>${x.emotion}</td><td>${x.match}</td><td>${x.usage}</td><td><button class="btn btn-light" style="padding:6px 8px;font-size:10px" onclick="pickColor('${x.name}','${x.hex}')">Chọn</button></td></tr>`).join('')}
 document.getElementById('colorSearch').addEventListener('input',renderColors);document.querySelectorAll('[data-group]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-group]').forEach(x=>x.classList.remove('active'));b.classList.add('active');group=b.dataset.group;renderColors()}));function pickColor(n,h){bgTone.value=`${n} (${h})`;document.getElementById('ngan-sach').scrollIntoView({behavior:'smooth'})}
 init();
-</script></body></html>
+</script><div class="contact-float" aria-label="Liên hệ nhanh"><a class="contact-call" href="tel:0356831306" title="Gọi Kim Flora">☎<span>Gọi 0356 831 306</span></a><a class="contact-zalo" href="https://zalo.me/0356831306" target="_blank" rel="noopener" title="Nhắn Zalo">Zalo<span>Nhắn Zalo</span></a><a class="contact-messenger" href="https://m.me/kimshop1306" target="_blank" rel="noopener" title="Nhắn Messenger">f<span>Nhắn Messenger</span></a></div></body></html>
