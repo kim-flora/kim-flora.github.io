@@ -80,7 +80,27 @@
   async function saveProduct(product){const c=client();if(!c)throw new Error('Chưa kết nối Supabase');const payload={...product,updated_at:new Date().toISOString()};if(payload.id&&String(payload.id).startsWith('sp'))delete payload.id;const pid=payload.id||null;if(pid)delete payload.id;const {data,error}=pid?await c.from('products').update(payload).eq('id',pid).select().single():await c.from('products').insert(payload).select().single();if(error)throw error;_productsCache=null;return data}
   async function deleteProduct(id){const c=client();if(!c)throw new Error('Chưa kết nối Supabase');const {error}=await c.from('products').delete().eq('id',id);if(error)throw error;_productsCache=null}
   function safeName(name){return String(name||'image.jpg').toLowerCase().replace(/[^a-z0-9._-]+/g,'-')}
-  async function uploadImage(file,bucket='product-images',prefix='products'){const c=client();if(!c)throw new Error('Chưa kết nối Supabase');const path=`${prefix}/${Date.now()}-${Math.random().toString(36).slice(2,8)}-${safeName(file.name)}`;const {error}=await c.storage.from(bucket).upload(path,file,{upsert:false,cacheControl:'3600'});if(error)throw error;const {data}=c.storage.from(bucket).getPublicUrl(path);return data.publicUrl}
+  async function optimizeProductImage(file){
+    // Only ordinary product photos; preserve QR, category assets, animation and unsupported formats.
+    if(!/^image\/(jpeg|png|webp)$/i.test(file.type)||typeof document.createElement!=='function')return file;
+    let url;
+    try{
+      url=URL.createObjectURL(file);
+      const image=new Image();
+      await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=reject;image.src=url});
+      const w=image.naturalWidth,h=image.naturalHeight;if(!w||!h)return file;
+      if(Math.max(w,h)<=1600&&file.size<=350000)return file;
+      const scale=Math.min(1,1600/Math.max(w,h));
+      const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(w*scale));canvas.height=Math.max(1,Math.round(h*scale));
+      const ctx=canvas.getContext('2d');if(!ctx)return file;
+      ctx.imageSmoothingQuality='high';ctx.drawImage(image,0,0,canvas.width,canvas.height);
+      const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',0.88));
+      if(!blob||blob.type!=='image/webp'||blob.size>=file.size)return file;
+      return new File([blob],file.name.replace(/\.[^.]+$/,'')+'.webp',{type:'image/webp',lastModified:file.lastModified});
+    }catch(error){console.warn('Giữ ảnh gốc do không thể tối ưu:',error);return file;}
+    finally{if(url)URL.revokeObjectURL(url);}
+  }
+  async function uploadImage(file,bucket='product-images',prefix='products'){const c=client();if(!c)throw new Error('Chưa kết nối Supabase');const optimized=bucket==='product-images'&&prefix==='products'?await optimizeProductImage(file):file;const path=`${prefix}/${Date.now()}-${Math.random().toString(36).slice(2,8)}-${safeName(optimized.name)}`;let {error}=await c.storage.from(bucket).upload(path,optimized,{upsert:false,cacheControl:'86400'});if(error&&optimized!==file){const fallbackPath=`${prefix}/${Date.now()}-${Math.random().toString(36).slice(2,8)}-${safeName(file.name)}`;const retry=await c.storage.from(bucket).upload(fallbackPath,file,{upsert:false,cacheControl:'86400'});if(retry.error)throw retry.error;return c.storage.from(bucket).getPublicUrl(fallbackPath).data.publicUrl;}if(error)throw error;const {data}=c.storage.from(bucket).getPublicUrl(path);return data.publicUrl}
   async function adminOrders(){const c=client();if(!c)return[];const {data,error}=await c.from('orders').select('*').order('created_at',{ascending:false});if(error)throw error;return data||[]}
   async function updateOrder(id,patch){const c=client();const {data,error}=await c.from('orders').update(patch).eq('id',id).select().single();if(error)throw error;return data}
   async function adminArticles(){const c=client();if(!c)return[];const {data,error}=await c.from('articles').select('*').order('sort_order',{ascending:true});if(error)throw error;return data||[]}
