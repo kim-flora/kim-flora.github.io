@@ -80,27 +80,77 @@
   async function saveProduct(product){const c=client();if(!c)throw new Error('Chưa kết nối Supabase');const payload={...product,updated_at:new Date().toISOString()};if(payload.id&&String(payload.id).startsWith('sp'))delete payload.id;const pid=payload.id||null;if(pid)delete payload.id;const {data,error}=pid?await c.from('products').update(payload).eq('id',pid).select().single():await c.from('products').insert(payload).select().single();if(error)throw error;_productsCache=null;return data}
   async function deleteProduct(id){const c=client();if(!c)throw new Error('Chưa kết nối Supabase');const {error}=await c.from('products').delete().eq('id',id);if(error)throw error;_productsCache=null}
   function safeName(name){return String(name||'image.jpg').toLowerCase().replace(/[^a-z0-9._-]+/g,'-')}
-  async function optimizeProductImage(file){
-    // Only ordinary product photos; preserve QR, category assets, animation and unsupported formats.
-    if(!/^image\/(jpeg|png|webp)$/i.test(file.type)||typeof document.createElement!=='function')return file;
+  // Two independent image sizes, without changing the existing product schema.
+  async function productPhotoVariants(file){
+    if(!/^image\/(jpeg|png)$/i.test(file.type))return {detail:file,thumb:null};
     let url;
     try{
       url=URL.createObjectURL(file);
       const image=new Image();
       await new Promise((resolve,reject)=>{image.onload=resolve;image.onerror=reject;image.src=url});
-      const w=image.naturalWidth,h=image.naturalHeight;if(!w||!h)return file;
-      if(Math.max(w,h)<=1600&&file.size<=350000)return file;
-      const scale=Math.min(1,1600/Math.max(w,h));
-      const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(w*scale));canvas.height=Math.max(1,Math.round(h*scale));
-      const ctx=canvas.getContext('2d');if(!ctx)return file;
-      ctx.imageSmoothingQuality='high';ctx.drawImage(image,0,0,canvas.width,canvas.height);
-      const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',0.88));
-      if(!blob||blob.type!=='image/webp'||blob.size>=file.size)return file;
-      return new File([blob],file.name.replace(/\.[^.]+$/,'')+'.webp',{type:'image/webp',lastModified:file.lastModified});
-    }catch(error){console.warn('Giữ ảnh gốc do không thể tối ưu:',error);return file;}
+      const w=image.naturalWidth,h=image.naturalHeight,longest=Math.max(w,h);
+      if(!longest)return {detail:file,thumb:null};
+      async function encode(max,quality){
+        const scale=Math.min(1,max/longest);
+        const canvas=document.createElement('canvas');
+        canvas.width=Math.max(1,Math.round(w*scale));canvas.height=Math.max(1,Math.round(h*scale));
+        const ctx=canvas.getContext('2d');if(!ctx)return null;
+        ctx.imageSmoothingQuality='high';ctx.drawImage(image,0,0,canvas.width,canvas.height);
+        const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',quality));
+        return blob?.type==='image/webp'?blob:null;
+      }
+      const detailBlob=longest>2000||file.size>600000?await encode(2000,0.92):null;
+      const detail=detailBlob&&detailBlob.size<file.size?new File([detailBlob],'detail.webp',{type:'image/webp'}):file;
+      const thumb=longest>800?await encode(800,0.88):null;
+      return {detail,thumb:thumb&&thumb.size<detail.size?thumb:null};
+    }catch(error){console.warn('Giữ ảnh gốc:',error);return {detail:file,thumb:null};}
     finally{if(url)URL.revokeObjectURL(url);}
   }
-  async function uploadImage(file,bucket='product-images',prefix='products'){const c=client();if(!c)throw new Error('Chưa kết nối Supabase');const optimized=bucket==='product-images'&&prefix==='products'?await optimizeProductImage(file):file;const path=`${prefix}/${Date.now()}-${Math.random().toString(36).slice(2,8)}-${safeName(optimized.name)}`;let {error}=await c.storage.from(bucket).upload(path,optimized,{upsert:false,cacheControl:'86400'});if(error&&optimized!==file){const fallbackPath=`${prefix}/${Date.now()}-${Math.random().toString(36).slice(2,8)}-${safeName(file.name)}`;const retry=await c.storage.from(bucket).upload(fallbackPath,file,{upsert:false,cacheControl:'86400'});if(retry.error)throw retry.error;return c.storage.from(bucket).getPublicUrl(fallbackPath).data.publicUrl;}if(error)throw error;const {data}=c.storage.from(bucket).getPublicUrl(path);return data.publicUrl}
+  function thumbnailUrl(value){
+    // Only URLs explicitly marked as paired by a successful upload are eligible.
+    if(typeof value!=='string')return value;
+    try{
+      const u=new URL(value);
+      if(u.origin!==new URL(cfg().url).origin)return value;
+      const pattern=/^(\/storage\/v1\/object\/public\/product-images\/products\/kf-pair-[a-z0-9-]+)-detail\.(?:webp|jpg|jpeg|png)$/i;
+      if(!pattern.test(u.pathname))return value;
+      u.pathname=u.pathname.replace(pattern,'$1-thumb.webp');
+      return u.href;
+    }catch(_){return value;}
+  }
+  function restoreFullImage(img){
+    const full=img.getAttribute('data-full-image');
+    if(full&&img.getAttribute('src')!==full){img.removeAttribute('data-full-image');img.src=full;}
+  }
+  async function uploadImage(file,bucket='product-images',prefix='products'){
+    const c=client();if(!c)throw new Error('Chưa kết nối Supabase');
+    const storage=c.storage.from(bucket),token=Date.now()+'-'+Math.random().toString(36).slice(2,10);
+    const publicUrl=path=>storage.getPublicUrl(path).data.publicUrl;
+    const upload=(path,body)=>storage.upload(path,body,{upsert:false,cacheControl:'86400',contentType:body.type||undefined});
+    if(bucket==='product-images'&&prefix==='products'){
+      const {detail,thumb}=await productPhotoVariants(file);
+      if(thumb){
+        const base=prefix+'/kf-pair-'+token,thumbPath=base+'-thumb.webp';
+        const t=await upload(thumbPath,thumb);
+        if(!t.error){
+          const ext=detail.type==='image/webp'?'webp':detail.type==='image/png'?'png':'jpg';
+          const detailPath=base+'-detail.'+ext;
+          const d=await upload(detailPath,detail);
+          if(!d.error)return publicUrl(detailPath);
+          // Best-effort cleanup only of the newly created unused thumbnail.
+          try{await storage.remove([thumbPath]);}catch(_){}
+        }
+      }
+      const path=prefix+'/'+token+'-'+safeName(detail.name);
+      const d=await upload(path,detail);
+      if(!d.error)return publicUrl(path);
+      if(detail===file)throw d.error;
+    }
+    const path=prefix+'/'+token+'-original-'+safeName(file.name);
+    const result=await upload(path,file);
+    if(result.error)throw result.error;
+    return publicUrl(path);
+  }
   async function adminOrders(){const c=client();if(!c)return[];const {data,error}=await c.from('orders').select('*').order('created_at',{ascending:false});if(error)throw error;return data||[]}
   async function updateOrder(id,patch){const c=client();const {data,error}=await c.from('orders').update(patch).eq('id',id).select().single();if(error)throw error;return data}
   async function adminArticles(){const c=client();if(!c)return[];const {data,error}=await c.from('articles').select('*').order('sort_order',{ascending:true});if(error)throw error;return data||[]}
@@ -125,7 +175,7 @@
     const {error}=await c.from('categories').delete().eq('id',id);if(error)throw error;
   }
   async function saveSetting(key,value){const c=client();const {data,error}=await c.from('site_settings').upsert({key,value,updated_at:new Date().toISOString()}).select().single();if(error)throw error;return data}
-  window.KFStore={FALLBACK_PRODUCTS,FALLBACK_CATEGORIES,isConfigured,client,esc,money,loadProducts,getProduct,loadCategories,loadArticles,getSetting,getCart,saveCart,addToCart,setQty,removeFromCart,clearCart,cartCount,updateCartCount,hydrateCart,getSession,signInOAuth,signOut,refreshAccountUI,createOrder,myOrders,isAdmin,adminProducts,saveProduct,deleteProduct,uploadImage,adminOrders,updateOrder,adminArticles,saveArticle,deleteArticle,adminCategories,saveCategory,deleteCategory,saveSetting};
+  window.KFStore={FALLBACK_PRODUCTS,FALLBACK_CATEGORIES,isConfigured,client,esc,money,loadProducts,getProduct,loadCategories,loadArticles,getSetting,getCart,saveCart,addToCart,setQty,removeFromCart,clearCart,cartCount,updateCartCount,hydrateCart,getSession,signInOAuth,signOut,refreshAccountUI,createOrder,myOrders,isAdmin,adminProducts,saveProduct,deleteProduct,uploadImage,thumbnailUrl,restoreFullImage,adminOrders,updateOrder,adminArticles,saveArticle,deleteArticle,adminCategories,saveCategory,deleteCategory,saveSetting};
   // Discourage casual copying of storefront photos; keep admin and payment QR unaffected.
   function protectStorefrontPhotos(){
     if(/(?:^|\/)admin\.html$/i.test(location.pathname))return;
