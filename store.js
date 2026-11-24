@@ -126,5 +126,17 @@
   }
   async function saveSetting(key,value){const c=client();const {data,error}=await c.from('site_settings').upsert({key,value,updated_at:new Date().toISOString()}).select().single();if(error)throw error;return data}
   window.KFStore={FALLBACK_PRODUCTS,FALLBACK_CATEGORIES,isConfigured,client,esc,money,loadProducts,getProduct,loadCategories,loadArticles,getSetting,getCart,saveCart,addToCart,setQty,removeFromCart,clearCart,cartCount,updateCartCount,hydrateCart,getSession,signInOAuth,signOut,refreshAccountUI,createOrder,myOrders,isAdmin,adminProducts,saveProduct,deleteProduct,uploadImage,adminOrders,updateOrder,adminArticles,saveArticle,deleteArticle,adminCategories,saveCategory,deleteCategory,saveSetting};
+  // Discourage casual copying of storefront photos; keep admin and payment QR unaffected.
+  function protectStorefrontPhotos(){
+    if(/(?:^|\/)admin\.html$/i.test(location.pathname))return;
+    const selector='.product-media img,.main-photo img,.thumb img,#lightboxImg,.hero img';
+    function protectedPhoto(target){return target instanceof Element && (target.matches(selector)||!!target.closest('.product-media,.main-photo,.thumb')?.querySelector('img'));}
+    const style=document.createElement('style');
+    style.textContent=selector.split(',').map(s=>s+'{-webkit-touch-callout:none;-webkit-user-drag:none;user-select:none}').join('\n');
+    document.head.appendChild(style);
+    document.addEventListener('contextmenu',event=>{if(protectedPhoto(event.target))event.preventDefault()},true);
+    document.addEventListener('dragstart',event=>{if(protectedPhoto(event.target))event.preventDefault()},true);
+  }
+  document.addEventListener('DOMContentLoaded',protectStorefrontPhotos);
   document.addEventListener('DOMContentLoaded',()=>{updateCartCount();refreshAccountUI().catch(()=>{})});
 })();
