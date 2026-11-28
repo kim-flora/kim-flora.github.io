@@ -73,7 +73,7 @@
   async function signInOAuth(provider,redirectPage='account.html'){const c=client();if(!c)throw new Error('Chưa cấu hình Supabase');const redirectTo=location.origin+'/'+String(redirectPage).replace(/^\//,'');return c.auth.signInWithOAuth({provider,options:{redirectTo}})}
   async function signOut(){const c=client();if(c)await c.auth.signOut()}
   async function refreshAccountUI(){const session=await getSession();document.querySelectorAll('[data-account-label]').forEach(el=>el.textContent=session?.user?.email?'Tài khoản':'Đăng nhập');return session}
-  async function createOrder(payload){const c=client();if(!c)throw new Error('Website chưa kết nối cơ sở dữ liệu.');const {data,error}=await c.from('orders').insert(payload).select('*').single();if(error)throw error;return data}
+  async function createOrder(payload){const c=client();if(!c)throw new Error('Website chưa kết nối cơ sở dữ liệu.');const {error}=await c.from('orders').insert(payload);if(error)throw error;return {order_code:payload.order_code}}
   async function myOrders(){const c=client();const s=await getSession();if(!c||!s)return[];const {data,error}=await c.from('orders').select('*').eq('user_id',s.user.id).order('created_at',{ascending:false});if(error)throw error;return data||[]}
   async function isAdmin(){const c=client();const s=await getSession();if(!c||!s)return false;const {data,error}=await c.from('admins').select('user_id').eq('user_id',s.user.id).maybeSingle();return !error&&!!data}
   async function adminProducts(){const c=client();if(!c)return FALLBACK_PRODUCTS;const {data,error}=await c.from('products').select('*').order('sort_order',{ascending:true}).order('created_at',{ascending:false});if(error)throw error;return data||[]}

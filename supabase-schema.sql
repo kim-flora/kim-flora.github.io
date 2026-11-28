@@ -173,9 +173,7 @@ values (
   ),
   now()
 )
-on conflict (key) do update
-set value = excluded.value,
-    updated_at = now();
+on conflict (key) do nothing;
 
 
 -- Danh mục mặc định
