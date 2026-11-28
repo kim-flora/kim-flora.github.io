@@ -75,7 +75,7 @@
   async function refreshAccountUI(){const session=await getSession();document.querySelectorAll('[data-account-label]').forEach(el=>el.textContent=session?.user?.email?'Tài khoản':'Đăng nhập');return session}
   async function createOrder(payload){const c=client();if(!c)throw new Error('Website chưa kết nối cơ sở dữ liệu.');const {error}=await c.from('orders').insert(payload);if(error)throw error;return {order_code:payload.order_code}}
   async function myOrders(){const c=client();const s=await getSession();if(!c||!s)return[];const {data,error}=await c.from('orders').select('*').eq('user_id',s.user.id).order('created_at',{ascending:false});if(error)throw error;return data||[]}
-  async function isAdmin(){const c=client();const s=await getSession();if(!c||!s)return false;const {data,error}=await c.from('admins').select('user_id').eq('user_id',s.user.id).maybeSingle();return !error&&!!data}
+  async function isAdmin(){const c=client();const s=await getSession();if(!c||!s)return false;const {data,error}=await c.from('admins').select('user_id').eq('user_id',s.user.id).maybeSingle();if(error)throw error;return !!data}
   async function adminProducts(){const c=client();if(!c)return FALLBACK_PRODUCTS;const {data,error}=await c.from('products').select('*').order('sort_order',{ascending:true}).order('created_at',{ascending:false});if(error)throw error;return data||[]}
   async function saveProduct(product){const c=client();if(!c)throw new Error('Chưa kết nối Supabase');const payload={...product,updated_at:new Date().toISOString()};if(payload.id&&String(payload.id).startsWith('sp'))delete payload.id;const pid=payload.id||null;if(pid)delete payload.id;const {data,error}=pid?await c.from('products').update(payload).eq('id',pid).select().single():await c.from('products').insert(payload).select().single();if(error)throw error;_productsCache=null;return data}
   async function deleteProduct(id){const c=client();if(!c)throw new Error('Chưa kết nối Supabase');const {error}=await c.from('products').delete().eq('id',id);if(error)throw error;_productsCache=null}
@@ -156,7 +156,11 @@
   async function adminArticles(){const c=client();if(!c)return[];const {data,error}=await c.from('articles').select('*').order('sort_order',{ascending:true});if(error)throw error;return data||[]}
   async function saveArticle(a){const c=client();const payload={...a,updated_at:new Date().toISOString()};const aid=payload.id||null;if(aid)delete payload.id;const {data,error}=aid?await c.from('articles').update(payload).eq('id',aid).select().single():await c.from('articles').insert(payload).select().single();if(error)throw error;return data}
   async function deleteArticle(id){const c=client();const {error}=await c.from('articles').delete().eq('id',id);if(error)throw error}
-  async function adminCategories(){return loadCategories(false)}
+  async function adminCategories(){
+    const {data,error}=await client().from('categories').select('*').order('sort_order',{ascending:true}).order('created_at',{ascending:true});
+    if(error)throw error;
+    return data||[];
+  }
   function slugify(v=''){return String(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/đ/g,'d').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'')||'danh-muc'}
   async function saveCategory(cat,oldName=''){
     const c=client();if(!c)throw new Error('Chưa kết nối Supabase');
@@ -174,8 +178,24 @@
     if((count||0)>0)throw new Error(`Danh mục “${cat.name}” đang có ${count} sản phẩm. Hãy chuyển sản phẩm sang danh mục khác trước khi xóa.`);
     const {error}=await c.from('categories').delete().eq('id',id);if(error)throw error;
   }
-  async function saveSetting(key,value){const c=client();const {data,error}=await c.from('site_settings').upsert({key,value,updated_at:new Date().toISOString()}).select().single();if(error)throw error;return data}
-  window.KFStore={FALLBACK_PRODUCTS,FALLBACK_CATEGORIES,isConfigured,client,esc,money,loadProducts,getProduct,loadCategories,loadArticles,getSetting,getCart,saveCart,addToCart,setQty,removeFromCart,clearCart,cartCount,updateCartCount,hydrateCart,getSession,signInOAuth,signOut,refreshAccountUI,createOrder,myOrders,isAdmin,adminProducts,saveProduct,deleteProduct,uploadImage,thumbnailUrl,restoreFullImage,adminOrders,updateOrder,adminArticles,saveArticle,deleteArticle,adminCategories,saveCategory,deleteCategory,saveSetting};
+  async function adminSetting(key){
+    const {data,error}=await client().from('site_settings').select('value,updated_at').eq('key',key).maybeSingle();
+    if(error)throw error;
+    return data;
+  }
+  async function saveSetting(key,value,revision){
+    if(revision===undefined)throw new Error('Hãy tải lại cấu hình trước khi lưu.');
+    const table=client().from('site_settings');
+    const lastTime=revision===null?0:Date.parse(revision);
+    const updated_at=new Date(Math.max(Date.now(),lastTime+1)).toISOString();
+    const result=revision===null
+      ? await table.insert({key,value,updated_at}).select('updated_at').single()
+      : await table.update({value,updated_at}).eq('key',key).eq('updated_at',revision).select('updated_at').maybeSingle();
+    if(result.error&&result.error.code!=='23505')throw result.error;
+    if(!result.data)throw new Error('Cấu hình đã thay đổi. Vui lòng tải lại trang trước khi lưu.');
+    return result.data.updated_at;
+  }
+  window.KFStore={FALLBACK_PRODUCTS,FALLBACK_CATEGORIES,isConfigured,client,esc,money,loadProducts,getProduct,loadCategories,loadArticles,getSetting,getCart,saveCart,addToCart,setQty,removeFromCart,clearCart,cartCount,updateCartCount,hydrateCart,getSession,signInOAuth,signOut,refreshAccountUI,createOrder,myOrders,isAdmin,adminProducts,saveProduct,deleteProduct,uploadImage,thumbnailUrl,restoreFullImage,adminOrders,updateOrder,adminArticles,saveArticle,deleteArticle,adminCategories,adminSetting,saveCategory,deleteCategory,saveSetting};
   // Discourage casual copying of storefront photos; keep admin and payment QR unaffected.
   function protectStorefrontPhotos(){
     if(/(?:^|\/)admin\.html$/i.test(location.pathname))return;
